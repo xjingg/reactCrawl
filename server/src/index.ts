@@ -21,6 +21,6 @@ app.use(
 
 app.use(router);
 
-app.listen(7001, () => {
+app.listen(8000, () => {
   console.log("server is running");
 });

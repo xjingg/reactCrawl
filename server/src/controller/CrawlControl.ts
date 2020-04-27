@@ -1,11 +1,11 @@
-import fs from 'fs';
-import path from 'path';
-import 'reflect-metadata';
-import { Request, Response, NextFunction } from 'express';
-import { controller, use, get } from '../decorator';
-import { getResponseData } from '../utils/util';
-import Crawler from '../utils/crawler';
-import Analyzer from '../utils/analyzer';
+import fs from "fs";
+import path from "path";
+import "reflect-metadata";
+import { Request, Response, NextFunction } from "express";
+import { controller, use, get } from "../decorator";
+import { getResponseData } from "../utils/util";
+import Crawler, { multiCrawler } from "../utils/crawler";
+import Analyzer from "../utils/analyzer";
 
 interface BodyRequest extends Request {
   body: { [key: string]: string | undefined };
@@ -26,34 +26,41 @@ const checkLogin = (req: Request, res: Response, next: NextFunction): void => {
   if (isLogin) {
     next();
   } else {
-    res.json(getResponseData(null, 'please login'));
+    res.json(getResponseData(null, "please login"));
   }
 };
 
-@controller('/api')
+@controller("/api")
 export class CrawlerControl {
-  @get('/getData')
+  @get("/getData")
   @use(checkLogin)
   getData(req: BodyRequest, res: Response): void {
     // console.log("getData")
-    const url = "https://www.cdc.gov/coronavirus/2019-ncov/cases-updates/cases-in-us.html"
+    const url =
+      "https://www.cdc.gov/coronavirus/2019-ncov/cases-updates/cases-in-us.html";
+
+    const url2 =
+      "https://www.cdc.gov/coronavirus/2019-ncov/cases-updates/cases-in-us.html";
     const analyzer = Analyzer.getInstance();
-    new Crawler(url, analyzer);
+    const crawler = new multiCrawler(url, url2, analyzer);
+    crawler.initSpiderProcess();
+    // const crawler = new Crawler(url, analyzer);
+    // crawler.initSpiderProcess();
     res.json(getResponseData<boolean>(true));
   }
 
   //'showData', the endpoint to pass data to frontend
-  @get('/showData')
+  @get("/showData")
   @use(checkLogin)
   showData(req: BodyRequest, res: Response): void {
     try {
-      console.log("getData")
+      console.log("getData");
 
-      const position = path.resolve(__dirname, '../../data/case.json');
-      const result = fs.readFileSync(position, 'utf8');
+      const position = path.resolve(__dirname, "../../data/case.json");
+      const result = fs.readFileSync(position, "utf8");
       res.json(getResponseData<DataStructure>(JSON.parse(result)));
     } catch (e) {
-      res.json(getResponseData<boolean>(false, 'data not exist'));
+      res.json(getResponseData<boolean>(false, "data not exist"));
     }
   }
 }

@@ -72,8 +72,54 @@ export default class CaseAnalyzer implements Analyzer {
   }
 
   public analyze(html: string, filePath: string) {
-    this.getVirusInfo(html);
+    //this.getVirusInfo(html);
     const caseInfo = this.getVirusInfo(html);
+    const fileContent = this.generateJsonContent(caseInfo, filePath);
+    return JSON.stringify(fileContent);
+  }
+
+  private getText($: CheerioStatic, className: string) {
+    return parseInt(
+      $(className)
+        .text()
+        .replace(",", "")
+    );
+  }
+
+  private getLargerVirusInfo(html: string, html2: string) {
+    const $ = cheerio.load(html);
+    const $2 = cheerio.load(html2);
+
+    const totalCases1 = this.getText($, "#covid-19-cases-total");
+    const totalCases2 = this.getText($2, "#covid-19-cases-total");
+    const totalCases = totalCases1 > totalCases2 ? totalCases1 : totalCases2;
+
+    const totalDeath1 = this.getText($, "#covid-19-deaths-total");
+    const totalDeath2 = this.getText($2, "#covid-19-deaths-total");
+    const totalDeath = totalDeath1 > totalDeath2 ? totalDeath1 : totalDeath2;
+    // const totalCases = parseInt(
+    //   $("#covid-19-cases-total")
+    //     .text()
+    //     .replace(",", "")
+    // );
+    // const totalDeath = parseInt(
+    //   $("#covid-19-deaths-total")
+    //     .text()
+    //     .replace(",", "")
+    // );
+    const infos: Case[] = [];
+    infos.push({ title: "cases", count: totalCases });
+    infos.push({ title: "death", count: totalDeath });
+
+    console.log(totalCases);
+    return {
+      time: new Date().getTime(),
+      data: infos
+    };
+  }
+
+  public analyzeMultiple(html1: string, html2: string, filePath: string) {
+    const caseInfo = this.getLargerVirusInfo(html1, html2);
     const fileContent = this.generateJsonContent(caseInfo, filePath);
     return JSON.stringify(fileContent);
   }
